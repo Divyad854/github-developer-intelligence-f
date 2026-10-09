@@ -139,7 +139,8 @@ export function baseUrl(req: NextRequest) {
 /** Callback URL registered in the GitHub OAuth App. */
 export function callbackUrl(req: NextRequest) {
   const env = process.env.GITHUB_CALLBACK_URL?.trim();
-  if (env && !(isProd() && isLocalUrl(env))) return env;
+  // Only honor the env value if it is a full callback URL (ends with the callback path).
+  if (env && /\/api\/github\/callback\/?$/.test(env) && !(isProd() && isLocalUrl(env))) return env.replace(/\/$/, "");
   return `${baseUrl(req)}/api/github/callback`;
 }
 

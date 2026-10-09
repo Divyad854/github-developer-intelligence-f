@@ -759,20 +759,21 @@ export default function ReportView({
             />
           </div>
 
-          {Object.keys(a.activity.eventTypes).length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-500">
-              {Object.entries(a.activity.eventTypes)
-                .sort((x, y) => y[1] - x[1])
-                .map(([type, count]) => (
-                  <span
-                    key={type}
-                    className="rounded bg-slate-200 px-2 py-1"
-                  >
-                    {type} · {count}
-                  </span>
-                ))}
-            </div>
-          )}
+        
+{Object.keys(a.activity.eventTypes ?? {}).length > 0 && (
+  <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-500">
+    {Object.entries(a.activity.eventTypes ?? {})
+      .sort((x, y) => y[1] - x[1])
+      .map(([type, count]) => (
+        <span
+          key={type}
+          className="rounded bg-slate-200 px-2 py-1"
+        >
+          {type} · {count}
+        </span>
+      ))}
+  </div>
+)}
         </Card>
       </div>
 

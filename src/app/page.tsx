@@ -253,21 +253,21 @@ export default function Home() {
         id="features"
         className="border-b border-slate-100 bg-slate-50/80 py-20 sm:py-24"
       >
-        <div className="mx-auto max-w-7xl px-5 sm:px-8">
+      
+<div className="mx-auto max-w-7xl px-5 sm:px-8">
+  <div className="mx-auto max-w-2xl text-center">
+    <p className="text-xs font-black uppercase tracking-[.2em] text-indigo-600">
+      Everything in one place
+    </p>
 
-          <div className="max-w-2xl">
-            <p className="text-xs font-black uppercase tracking-[.2em] text-indigo-600">
-              Everything in one place
-            </p>
+    <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+      A cleaner way to read developer signals.
+    </h2>
 
-            <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-              A cleaner way to read developer signals.
-            </h2>
-
-            <p className="mt-4 text-sm font-medium leading-7 text-slate-500 sm:text-base">
-              Designed to make GitHub data useful without making you dig through dozens of pages.
-            </p>
-          </div>
+    <p className="mt-4 text-sm font-medium leading-7 text-slate-500 sm:text-base">
+      Designed to make GitHub data useful without making you dig through dozens of pages.
+    </p>
+  </div>
 
           <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {features.map(([n, t, d]) => (

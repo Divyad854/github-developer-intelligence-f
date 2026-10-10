@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
-
+import DeletedUser from "@/models/DeletedUser";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import EmailVerification from "@/models/EmailVerification";
@@ -34,17 +34,20 @@ export async function POST(req: NextRequest) {
       email: normalizedEmail,
     });
 
-    if (existingUser) {
+     if (existingUser) {
+      const wasDeleted = await DeletedUser.exists({
+        userId: existingUser._id,
+      });
+
       return NextResponse.json(
-        { message: "Email is already registered" },
+        {
+          message: wasDeleted
+            ? "This account was deleted. Contact the administrator to restore it."
+            : "Email is already registered",
+        },
         { status: 409 }
       );
     }
-
-    // Delete previous OTP
-    await EmailVerification.deleteOne({
-      email: normalizedEmail,
-    });
 
     // Generate 6 digit OTP
     const otp = crypto.randomInt(100000, 1000000).toString();

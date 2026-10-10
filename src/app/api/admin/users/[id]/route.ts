@@ -1,11 +1,43 @@
 import { NextResponse } from "next/server";
 
+import { getSession } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import BlockedUser from "@/models/BlockedUser";
+import DeletedUser from "@/models/DeletedUser";
 
 /* =====================================================
-   BLOCK / UNBLOCK
+   ADMIN CHECK
+===================================================== */
+
+async function checkAdmin() {
+  const session = await getSession();
+
+  if (!session) {
+    return {
+      session: null,
+      response: NextResponse.json(
+        { error: "Not authenticated" },
+        { status: 401 }
+      ),
+    };
+  }
+
+  if (session.role !== "admin") {
+    return {
+      session: null,
+      response: NextResponse.json(
+        { error: "Admin access required" },
+        { status: 403 }
+      ),
+    };
+  }
+
+  return { session, response: null };
+}
+
+/* =====================================================
+   BLOCK / UNBLOCK / RESTORE
 ===================================================== */
 
 export async function PATCH(
@@ -17,20 +49,25 @@ export async function PATCH(
   }
 ) {
   try {
+    const admin = await checkAdmin();
+
+    if (admin.response) {
+      return admin.response;
+    }
+
     await connectDB();
 
     const userId = context.params.id;
 
-    console.log("ADMIN USER ACTION");
-    console.log("USER ID:", userId);
-
     const body = await request.json();
-
-    console.log("BODY:", body);
 
     const action = body?.action;
 
-    if (action !== "block" && action !== "unblock") {
+    if (
+      action !== "block" &&
+      action !== "unblock" &&
+      action !== "restore"
+    ) {
       return NextResponse.json(
         {
           error: "Invalid action",
@@ -53,6 +90,47 @@ export async function PATCH(
         },
         {
           status: 404,
+        }
+      );
+    }
+
+    const isDeleted = await DeletedUser.exists({
+      userId: user._id,
+    });
+
+    /* =====================================================
+       RESTORE DELETED USER
+    ===================================================== */
+
+    if (action === "restore") {
+      if (!isDeleted) {
+        return NextResponse.json(
+          {
+            error: "This user is not deleted",
+          },
+          {
+            status: 400,
+          }
+        );
+      }
+
+      await DeletedUser.deleteOne({
+        userId: user._id,
+      });
+
+      return NextResponse.json({
+        message: "User restored successfully",
+        isDeleted: false,
+      });
+    }
+
+    if (isDeleted) {
+      return NextResponse.json(
+        {
+          error: "Restore this user first",
+        },
+        {
+          status: 400,
         }
       );
     }
@@ -96,7 +174,7 @@ export async function PATCH(
     });
   } catch (error) {
     console.error(
-      "BLOCK / UNBLOCK ERROR:",
+      "BLOCK / UNBLOCK / RESTORE ERROR:",
       error
     );
 
@@ -116,6 +194,9 @@ export async function PATCH(
 
 /* =====================================================
    DELETE
+   - normal call      -> SOFT delete (can be restored)
+   - ?permanent=true  -> permanent delete, only for
+                         users that are already deleted
 ===================================================== */
 
 export async function DELETE(
@@ -127,9 +208,20 @@ export async function DELETE(
   }
 ) {
   try {
+    const admin = await checkAdmin();
+
+    if (admin.response || !admin.session) {
+      return admin.response;
+    }
+
     await connectDB();
 
     const userId = context.params.id;
+
+    const permanent =
+      new URL(request.url).searchParams.get(
+        "permanent"
+      ) === "true";
 
     const user = await User.findOne({
       _id: userId,
@@ -147,16 +239,78 @@ export async function DELETE(
       );
     }
 
-    await BlockedUser.deleteOne({
+    const isDeleted = await DeletedUser.exists({
       userId: user._id,
     });
 
-    await User.deleteOne({
-      _id: user._id,
-    });
+    /* =====================================================
+       PERMANENT DELETE (from the Deleted tab only)
+    ===================================================== */
+
+    if (permanent) {
+      if (!isDeleted) {
+        return NextResponse.json(
+          {
+            error:
+              "Delete the user first, then remove permanently from the Deleted tab",
+          },
+          {
+            status: 400,
+          }
+        );
+      }
+
+      await DeletedUser.deleteOne({
+        userId: user._id,
+      });
+
+      await BlockedUser.deleteOne({
+        userId: user._id,
+      });
+
+      await User.deleteOne({
+        _id: user._id,
+      });
+
+      return NextResponse.json({
+        message: "User permanently deleted",
+      });
+    }
+
+    /* =====================================================
+       SOFT DELETE
+    ===================================================== */
+
+    if (isDeleted) {
+      return NextResponse.json(
+        {
+          error: "User is already deleted",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    await DeletedUser.updateOne(
+      {
+        userId: user._id,
+      },
+      {
+        $set: {
+          userId: user._id,
+          deletedBy: admin.session.id,
+        },
+      },
+      {
+        upsert: true,
+      }
+    );
 
     return NextResponse.json({
-      message: "User deleted successfully",
+      message:
+        "User deleted. You can restore this user from the Deleted tab.",
+      isDeleted: true,
     });
   } catch (error) {
     console.error(

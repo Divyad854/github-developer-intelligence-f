@@ -1,7 +1,7 @@
 
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
-
+import DeletedUser from "@/models/DeletedUser";
 import {
   authResponse,
   clearAuthCookie,
@@ -46,7 +46,11 @@ export const GET = handle(async () => {
 
   const user = await User.findById(session.id);
 
-  if (!user) {
+  const deletedUser = await DeletedUser.findOne({
+    userId: session.id,
+  });
+
+  if (!user || deletedUser) {
     return clearAuthCookie(
       NextResponse.json(
         { error: "Not authenticated" },

@@ -1,11 +1,24 @@
 import { NextResponse } from "next/server";
 
+import { getSession } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import BlockedUser from "@/models/BlockedUser";
+import DeletedUser from "@/models/DeletedUser";
 
 export async function GET() {
   try {
+    /* ADMIN ONLY */
+    const session = await getSession();
+
+    if (!session) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    if (session.role !== "admin") {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    }
+
     await connectDB();
 
     const users = await User.find({
@@ -20,10 +33,22 @@ export async function GET() {
         .select("userId")
         .lean();
 
+    const deletedUsers =
+      await DeletedUser.find({})
+        .select("userId createdAt")
+        .lean();
+
     const blockedIds = new Set(
       blockedUsers.map((item) =>
         String(item.userId)
       )
+    );
+
+    const deletedMap = new Map(
+      deletedUsers.map((item) => [
+        String(item.userId),
+        item.createdAt,
+      ])
     );
 
     const result = users.map((user) => ({
@@ -34,6 +59,11 @@ export async function GET() {
       isBlocked: blockedIds.has(
         String(user._id)
       ),
+      isDeleted: deletedMap.has(
+        String(user._id)
+      ),
+      deletedAt:
+        deletedMap.get(String(user._id)) ?? null,
       createdAt: user.createdAt,
     }));
 

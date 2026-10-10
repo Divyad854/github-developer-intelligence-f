@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import { authResponse } from "@/lib/auth";
 import { HttpError, handle } from "@/lib/http";
-
+import DeletedUser from "@/models/DeletedUser";
 import User from "@/models/User";
 import BlockedUser from "@/models/BlockedUser";
 
@@ -55,6 +55,17 @@ export const POST = handle(async (req) => {
     );
   }
 
+
+  const deletedUser = await DeletedUser.findOne({
+    userId: user._id,
+  });
+
+  if (deletedUser) {
+    throw new HttpError(
+      403,
+      "This account has been deleted. Contact the administrator to restore it."
+    );
+  }
   /* =====================================================
      CHECK IF USER IS BLOCKED
   ===================================================== */

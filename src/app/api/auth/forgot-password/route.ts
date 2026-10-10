@@ -108,7 +108,7 @@ import { HttpError, handle } from "@/lib/http";
 
 import User from "@/models/User";
 import PasswordReset from "@/models/PasswordReset";
-
+import DeletedUser from "@/models/DeletedUser";
 export const POST = handle(async (req) => {
   const body = await req.json().catch(() => ({}));
 
@@ -134,7 +134,16 @@ export const POST = handle(async (req) => {
         "If an account exists for this email, a reset OTP has been sent.",
     });
   }
+  const deletedUser = await DeletedUser.findOne({
+    userId: user._id,
+  });
 
+  if (deletedUser) {
+    throw new HttpError(
+      403,
+      "This account has been deleted. Contact the administrator to restore it."
+    );
+  }
   // Remove old reset OTP
   await PasswordReset.deleteOne({ email });
 

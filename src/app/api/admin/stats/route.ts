@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-
+import DeletedUser from "@/models/DeletedUser";
 import { connectDB } from "@/lib/db";
 
 import User from "@/models/User";
@@ -8,7 +8,9 @@ import AnalysisHistory from "@/models/AnalysisHistory";
 export async function GET() {
   try {
     await connectDB();
-
+      const deletedIds = (
+      await DeletedUser.find({}).select("userId").lean<any[]>()
+    ).map((item) => item.userId);
     /* =====================================================
        TOTAL NORMAL USERS
     ===================================================== */

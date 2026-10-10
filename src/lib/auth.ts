@@ -120,7 +120,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { signToken, verifyToken, type Session } from "./jwt";
-
+import DeletedUser from "@/models/DeletedUser";
 import { connectDB } from "@/lib/db";
 import BlockedUser from "@/models/BlockedUser";
 
@@ -156,6 +156,15 @@ export async function getSession(): Promise<Session | null> {
     });
 
     if (blockedUser) {
+      return null;
+    }
+
+        // Soft-deleted users cannot use an old login cookie
+    const deletedUser = await DeletedUser.findOne({
+      userId: session.id,
+    });
+
+    if (deletedUser) {
       return null;
     }
   } catch (error) {

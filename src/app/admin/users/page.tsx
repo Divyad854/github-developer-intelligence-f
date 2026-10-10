@@ -581,7 +581,7 @@ export default function AdminUsersPage() {
                                 onClick={() => handleRestore(user)}
                                 className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
                               >
-                                {busy ? "..." : "Restore"}
+                                Restore
                               </button>
 
                               <button
@@ -590,7 +590,7 @@ export default function AdminUsersPage() {
                                 onClick={() => handlePermanentDelete(user)}
                                 className="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
                               >
-                                {busy ? "..." : "Delete forever"}
+                               Delete forever
                               </button>
                             </>
                           ) : (
@@ -605,7 +605,7 @@ export default function AdminUsersPage() {
                                     : "bg-amber-50 text-amber-700 hover:bg-amber-100"
                                 }`}
                               >
-                                {busy ? "..." : user.isBlocked ? "Unblock" : "Block"}
+                               {user.isBlocked ? "Unblock" : "Block"}
                               </button>
 
                               <button
@@ -614,7 +614,7 @@ export default function AdminUsersPage() {
                                 onClick={() => handleDelete(user)}
                                 className="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
                               >
-                                {busy ? "..." : "Delete"}
+                                Delete
                               </button>
                             </>
                           )}

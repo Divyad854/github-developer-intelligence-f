@@ -202,7 +202,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("pageshow", onPageShow);
   }, []);
 
-  if (!user) return <Spinner label="Checking your session…" />;
+  if (!user) return <Spinner label="Loading...." />;
 
   const items = user.role === "admin" ? ADMIN_NAV : NAV;
 

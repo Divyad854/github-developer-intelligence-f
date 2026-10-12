@@ -800,7 +800,7 @@ export default function SettingsPage() {
         </form>
       </section>
 
-      {/* DELETE ACCOUNT */}
+      {/* DELETE ACCOUNT
       <section className="overflow-hidden rounded-2xl border border-red-200 bg-white shadow-sm">
         <div className="border-b border-red-100 bg-red-50/60 px-5 py-4 sm:px-6">
           <h2 className="text-sm font-semibold text-red-700">
@@ -835,7 +835,7 @@ export default function SettingsPage() {
               : "Delete account"}
           </button>
         </div>
-      </section>
+      </section> */}
 
       {/* FEEDBACK */}
       <div className="mt-5 space-y-3">

@@ -45,11 +45,7 @@ export async function GET() {
       },
     });
 
-    /* =====================================================
-       NORMAL USER IDs
-       Used to exclude admin analysis records
-    ===================================================== */
-
+   
     const normalUsers = await User.find({
       role: { $ne: "admin" },
     })
